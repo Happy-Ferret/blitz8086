@@ -1,5 +1,5 @@
 SRCFILES := src/lex.yy.c src/parser.tab.c
-CFLAGS := -O2 ## -g
+CFLAGS := -O2 -DVERBOSE=0 ## -g
 
 all: src/parser.tab.c src/lex.yy.c bin/blitz8086
 

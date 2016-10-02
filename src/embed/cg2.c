@@ -1,19 +1,13 @@
-#include<stdio.h>
+#include <stdio.h>
 #include "dict.c"
 #include "rbencode.c"
-#define DEFAULT_PATH "a.bin"
-#define VERBOSE 0
+
 // Code Generator
 
-
 FILE *fp;
-void cg_start() {
-	fp = fopen(DEFAULT_PATH,"wb");
-}
-
-void cg_set(char *s) {
-	fp = fopen(s,"wb");
-
+FILE *cg_set(char *s) {
+	fp = fopen(s, "wb");
+	return fp;
 }
 
 int decode_reg(char *s) {
@@ -21,8 +15,6 @@ int decode_reg(char *s) {
 		init_dict();
 	return getval(s);
 }
-
-
 
 int _rmcode(char *mnemonic) {
 	if (!strcmp(mnemonic,"ADC"))
@@ -132,7 +124,7 @@ int _opcode(char *mnemonic) {
 }
 
 int iopcode(char * mnemonic) {
-	
+
 	if (!strcmp(mnemonic,"ADC"))
 		return 0100;
 	else if (!strcmp(mnemonic,"ADD"))
@@ -180,7 +172,7 @@ int iopcode(char * mnemonic) {
 int extr(char *);
 
 struct code {
-	
+
 	unsigned opcode:6;
 	unsigned s:1;
 	unsigned w:1;
@@ -193,7 +185,7 @@ struct code {
 	unsigned dispb:8;
 	unsigned imm16a:8;
 	unsigned imm16b:8;
-	
+
 
 };
 
@@ -222,7 +214,7 @@ void _clean() {
 
 int code_0op(char *mnem){
 	if (!initialized)
-		init_dict();	
+		init_dict();
 	int res = getval(mnem);
 	if(res!=-1)
 		putc(res,fp);
@@ -232,7 +224,7 @@ int code_0op(char *mnem){
 }
 
 int code_1op(char *mnem,char *op) {
-	
+
 	char buf[20];
 	strcpy(buf,mnem);
 	strcat(buf,",");
@@ -241,10 +233,10 @@ int code_1op(char *mnem,char *op) {
 	if(res!=-1)
 		putc(res,fp);
 	int codesize = (res!=-1?1:0);
-	
+
 	if(VERBOSE)
 		printf("\nInstruction Result:%d",codesize);
-	return codesize;	
+	return codesize;
 }
 
 int code_1op_imm(char *mnem,char * simm) {
@@ -257,13 +249,13 @@ int code_1op_imm(char *mnem,char * simm) {
 		printf("\nInstruction Result:%d",1);
 		return 1;
 	}
-	
+
 	int w =((imm&0xff) == imm) ?0:1;
-	int res;	
+	int res;
 	char buf[20];
 	strcpy(buf,mnem);
 	strcat(buf,",");
-	
+
 	if(w)
 		strcat(buf,"iw");
 	else
@@ -288,17 +280,17 @@ int code_1op_imm(char *mnem,char * simm) {
 			}
 	}
 	else {
-	//error handling	
+	//error handling
 	}
 if(VERBOSE)
 		printf("\nInstruction Result:%d",0);
 return 0;
 }
 int code_1op_mem(char *mnem,char *ev) {
-	int codesize=0;	
+	int codesize=0;
 	buffer.mod=00;
-	buffer.rm = (*(ev+1)=='B'||*(ev+1)=='b')?6:7;	
-	
+	buffer.rm = (*(ev+1)=='B'||*(ev+1)=='b')?6:7;
+
 	if(!strcmp(mnem,"POP")||!(strcmp(mnem,"pop"))){
 		buffer.reg = 0;
 		buffer.opc = 0xaf;
@@ -320,7 +312,7 @@ int code_1op_mem(char *mnem,char *ev) {
 			buffer.dispb=tmp[1];
 		}
 	}
-	if(buffer.opc){ 
+	if(buffer.opc){
 		putc(byte1(buffer),fp);codesize++;}
 	if(byte2(buffer)) {
 		putc(byte2(buffer),fp);codesize++;}
@@ -339,7 +331,7 @@ int code_1op_mem(char *mnem,char *ev) {
 int code_2op(char *mnem,char * sreg1,char * sreg2){
 	int reg1 = getval(sreg1);
 	int reg2 = getval(sreg2);
-	int codesize = 0;	
+	int codesize = 0;
 	if(!((reg1+1)&&(reg2+1)))
 		{if(VERBOSE)
 		printf("\nInstruction Result:%d",codesize);
@@ -355,7 +347,7 @@ int code_2op(char *mnem,char * sreg1,char * sreg2){
 		printf("\nInstruction Result:%d",codesize);	return 0; }//insert some error handling code here
 	buffer.opcode = t_opcode;
 	if(byte1(buffer)) {
-		putc(byte1(buffer),fp);codesize++;}	
+		putc(byte1(buffer),fp);codesize++;}
 	if(byte2(buffer)) {
 		putc(byte2(buffer),fp);codesize++;}
 	_clean();
@@ -377,7 +369,7 @@ int code_2op_reg_imm(char *mnem,char * sreg1,int imm){
 	if(t_rmcode==-2)
 		{
 		if(reg1==0||reg1==4||reg1==8) {
-			buffer.opcode = 011;			
+			buffer.opcode = 011;
 			if(buffer.w){
 				int mat[2];
 				encode(mat,imm);
@@ -393,7 +385,7 @@ int code_2op_reg_imm(char *mnem,char * sreg1,int imm){
 		}
 		if(VERBOSE)
 		printf("\nInstruction Result:%d",codesize);
-	return codesize;	
+	return codesize;
 		}
 
 	buffer.reg =reg1;
@@ -403,10 +395,10 @@ int code_2op_reg_imm(char *mnem,char * sreg1,int imm){
 		printf("\nInstruction Result:%d",codesize);return 0;} //insert some error handling code here
 	buffer.opcode = t_opcode;
 	buffer.rm = t_rmcode;
-	if(byte1(buffer)) { 
+	if(byte1(buffer)) {
 		putc(byte1(buffer),fp);
 		codesize++;
-}	
+}
 	if(byte2(buffer)) {
 		putc(byte2(buffer),fp);
 		codesize++;}
@@ -429,11 +421,11 @@ int code_2op_reg_mem(char *mnem,char * sreg1,char *ev)	{
 	int codesize = 0;
 	if(!(reg1+1)){
 		return 0;if(VERBOSE)
-		printf("\nInstruction Result:%d",codesize);}	
+		printf("\nInstruction Result:%d",codesize);}
 	buffer.w=1;
 	buffer.s = 0;
 	buffer.mod = 0;
-	buffer.rm = (*(ev+1)=='B'||*(ev+1)=='b')?6:7;	
+	buffer.rm = (*(ev+1)=='B'||*(ev+1)=='b')?6:7;
 	buffer.reg =reg1;
 	int xt = extr(ev);
 		if (!xt){
@@ -466,7 +458,7 @@ int code_2op_mem_reg(char *mnem,char *ev,char *sreg1){
 	buffer.w=1;
 	buffer.s = 1;
 	buffer.mod = 0;
-	buffer.rm = (*(ev+1)=='B'||*(ev+1)=='b')?6:7;	
+	buffer.rm = (*(ev+1)=='B'||*(ev+1)=='b')?6:7;
 	buffer.reg =reg1;
 	int xt = extr(ev);
 		if (!xt){
@@ -493,7 +485,7 @@ int code_2op_mem_reg(char *mnem,char *ev,char *sreg1){
 	if(VERBOSE)
 		printf("\nInstruction Result:%d",codesize);
 	return codesize;
-}	
+}
 
 int code_jump(char *mnem,int imm) {
 	int codesize = 0;
@@ -566,8 +558,8 @@ int code_jump(char *mnem,int imm) {
 		putc(buffer.dispa,fp);
 		putc(buffer.dispb,fp);
 		codesize+=2;
-		
-		
+
+
 
 	}
 	else {
@@ -625,7 +617,7 @@ int code_jump(char *mnem,int imm) {
 			codesize++;
 		}
 	putc(imm,fp);
-	codesize++;	
+	codesize++;
 	}
 
 
@@ -647,14 +639,14 @@ int extr(char *a) {
 	int len = strlen(a);
 	int scale = a[len-2]=='h'?16:10;
 	if(scale==16)	{
-		
+
 		sscanf(a,"[%s",b);
 		len = strlen(b);
 		b[len-2]='\0';
-		
-		return atoi(strcat(c,b));	
+
+		return atoi(strcat(c,b));
 	}
-	
+
 	sscanf(a,"[%s",b);
 	len = strlen(b);
 	b[len-1]='\0';
@@ -667,10 +659,9 @@ int extr2(char *a) {
 	int scale = a[len-1]=='h'?16:10;
 	if(scale==16)	{
 		b[len-1]='\0';
-		
-		return atoi(strcat(c,b));	
+
+		return atoi(strcat(c,b));
 	}
 	b[len-1]='\0';
 	return atoi(b);
 }
-
