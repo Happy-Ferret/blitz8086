@@ -9,7 +9,7 @@ src/parser.tab.c: src/parser.y
 src/lex.yy.c: src/lexer.l
 	cd src && flex lexer.l
 
-bin/blitz8086: $(SRCFILES)
+bin/blitz8086: $(SRCFILES) src/embed/*.c
 	mkdir -p bin/
 	$(CC) $(SRCFILES) -o $@ $(CFLAGS)
 
