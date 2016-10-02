@@ -146,7 +146,7 @@ typedef union YYSTYPE
 #include<stdio.h>
 #include<string.h>
 #include<stdlib.h>
-#include "cg2.c"
+#include "embed/cg2.c"
 int bytectr,unresolved;
 
 int chk_unres() {
